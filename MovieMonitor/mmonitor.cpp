@@ -4,11 +4,16 @@ mmonitor::mmonitor(QString dir, QObject *parent) :
     QObject(parent), watch_dir(dir)
 {
     dConnect = new Connection();
+    QDir d(watch_dir);
+    if(!d.exists() || !d.isReadable())
+    {
+        QLOG_FATAL() << "Directory '" + dir + "' is not readable.";
+        throw new std::exception;
+    }
+
     watcher  = new NotifyWorker(watch_dir);
     watcherThread = new QThread();
     wQueue = new QQueue<FileEvent>();
-    indexDir(watch_dir);
-    purgeMissing(watch_dir);
 }
 
 void mmonitor::indexDir(QString path)
@@ -19,7 +24,7 @@ void mmonitor::indexDir(QString path)
     foreach(QFileInfo file, files)
     {
         if(!dConnect->inDatabase(file.fileName()))
-            dConnect->addMovie(file.baseName(), file.fileName());
+            dConnect->addMovie(file.completeBaseName(), file.fileName());
     }
 }
 
@@ -37,6 +42,7 @@ void mmonitor::purgeMissing(QString path)
 
 void mmonitor::processEvent(FileEvent event)
 {
+    QLOG_TRACE() << "Processing Event";
     if(event.type.contains("IN_DELETE"))
     {
         dConnect->removeRow(event.name);
@@ -46,7 +52,7 @@ void mmonitor::processEvent(FileEvent event)
         QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
         if (file.isFile())
         {
-            dConnect->addMovie(file.baseName(), file.fileName());
+            dConnect->addMovie(file.completeBaseName(), file.fileName());
         }
     }
     else if(event.type.contains("IN_MOVED_FROM") ||
@@ -94,7 +100,7 @@ void mmonitor::checkQueue()
             QFileInfo file = QFileInfo(watch_dir+"/"+new_name);
             if (file.isFile())
             {
-                dConnect->updateRow(old_name, new_name, file.baseName());
+                dConnect->updateRow(old_name, new_name, file.completeBaseName());
             }
         }
         else
@@ -104,7 +110,7 @@ void mmonitor::checkQueue()
                 QFileInfo file = QFileInfo(watch_dir+"/"+e.name);
                 if (file.exists())
                 {
-                   dConnect->addMovie(file.baseName(), file.fileName());
+                   dConnect->addMovie(file.completeBaseName(), file.fileName());
                 }
             }
             else
@@ -117,6 +123,9 @@ void mmonitor::checkQueue()
 
 void mmonitor::start()
 {
+    indexDir(watch_dir);
+    purgeMissing(watch_dir);
+
     qRegisterMetaType<FileEvent>("FileEvent");
     connect(watcher, SIGNAL(fEvent(FileEvent)),
             this, SLOT(processEvent(FileEvent)));

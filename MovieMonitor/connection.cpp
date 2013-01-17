@@ -8,14 +8,24 @@ Connection::Connection(QObject *parent) :
     db.setDatabaseName("Movies");
     db.setUserName("MovieMonitor");
     db.setPassword("movRus8734");
+    QLOG_INFO() << "Attempting to connect to database...";
     dbOpen = db.open();
     if (dbOpen)
+    {
+        QLOG_INFO() << "Connection successful";
         QSqlQuery query("CREATE TABLE IF NOT EXISTS movies "
                               "(id int NOT NULL AUTO_INCREMENT, "
                               "name varchar(255) NOT NULL, "
                               "filename varchar(255) NOT NULL, "
                               "imbd varchar(255), "
                               "PRIMARY KEY (id))");
+    }
+    else
+    {
+        QLOG_FATAL() << "Connection to database was unsuccessful";
+        throw new std::exception;
+    }
+
 }
 
 
@@ -82,7 +92,6 @@ void Connection::updateRow(QString oldfile, QString newfile, QString newname)
     query.bindValue(":oldname", oldfile);
     query.bindValue(":newname", newfile);
     query.exec();
-    qDebug() << query.lastError();
 
     if(!isApproved(newfile))
     {

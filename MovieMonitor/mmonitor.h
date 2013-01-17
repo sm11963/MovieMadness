@@ -17,9 +17,7 @@ public:
     explicit mmonitor(QString dir, QObject *parent = 0);
     void indexDir(QString path);
     void purgeMissing(QString path);
-    
-signals:
-    
+
 public slots:
     void processEvent(FileEvent event);
     void checkQueue();

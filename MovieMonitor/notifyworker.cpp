@@ -7,42 +7,52 @@ NotifyWorker::NotifyWorker(QString dir, QObject *parent) :
 
 void NotifyWorker::startWatching()
 {
-    Inotify notify;
-
-    int32_t watch_mask = (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
-    QByteArray dir_str = watch_dir.toLocal8Bit();
-    InotifyWatch iw(dir_str.data(), watch_mask);
-
-    notify.Add(iw);
-
-    for(;;)
+    QLOG_TRACE() << "inotify starting";
+    try
     {
-        notify.WaitForEvents();
+        Inotify notify;
 
-        size_t count = notify.GetEventCount();
+        int32_t watch_mask = (IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
+        QByteArray dir_str = watch_dir.toLocal8Bit();
+        InotifyWatch iw(dir_str.data(), watch_mask);
 
-        while(count > 0)
+        notify.Add(iw);
+
+
+        for(;;)
         {
-            InotifyEvent event;
-            bool got_event = notify.GetEvent(&event);
+            notify.WaitForEvents();
+            QLOG_TRACE() << "iNotify event received";
 
-            if(got_event)
+            size_t count = notify.GetEventCount();
+
+            while(count > 0)
             {
-                FileEvent e;
-                std::string s;
-                event.DumpTypes(s);
+                InotifyEvent event;
+                bool got_event = notify.GetEvent(&event);
 
-                e.type = QString::fromUtf8(s.c_str());
-                e.cookie = event.GetCookie();
-                e.name = QString(event.GetName().c_str());
-
-                if(!e.type.contains("IN_ISDIR"))
+                if(got_event)
                 {
-                    emit fEvent(e);
-                }
-            }
+                    FileEvent e;
+                    std::string s;
+                    event.DumpTypes(s);
 
-            count--;
+                    e.type = QString::fromUtf8(s.c_str());
+                    e.cookie = event.GetCookie();
+                    e.name = QString(event.GetName().c_str());
+
+                    if(!e.type.contains("IN_ISDIR"))
+                    {
+                        emit fEvent(e);
+                    }
+                }
+
+                count--;
+            }
         }
+    }
+    catch(InotifyException e)
+    {
+        QLOG_WARN() << "Inotify failed to start: " + QString::fromStdString(e.GetMessage());
     }
 }

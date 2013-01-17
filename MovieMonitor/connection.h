@@ -4,12 +4,13 @@
 #include <QObject>
 #include <QSql>
 #include <QSqlDatabase>
-#include <QDebug>
 #include <QStringList>
 #include <QString>
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QSqlRecord>
+#include <QVariant>
+#include <QsLog/QsLog.h>
 
 class Connection : public QObject
 {
@@ -24,7 +25,7 @@ public:
 
     void updateRow(QString oldfile, QString newfile, QString newname);
 signals:
-    
+
 public slots:
     
 private:

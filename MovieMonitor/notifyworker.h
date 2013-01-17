@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "inotify-cxx/inotify-cxx.h"
+#include "QsLog/QsLog.h"
 
 typedef struct {
     QString name;

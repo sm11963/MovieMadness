@@ -19,12 +19,18 @@ SOURCES += main.cpp \
     connection.cpp \
     inotify-cxx/inotify-cxx.cpp \
     mmonitor.cpp \
-    notifyworker.cpp
+    notifyworker.cpp \
+    QsLog/QsLogDest.cpp \
+    QsLog/QsLog.cpp \
+    QsLog/QsDebugOutput.cpp
 
 HEADERS += \
     connection.h \
     inotify-cxx/inotify-cxx.h \
     mmonitor.h \
-    notifyworker.h
+    notifyworker.h \
+    QsLog/QsLogDest.h \
+    QsLog/QsLog.h \
+    QsLog/QsDebugOutput.h
 
 QTPLUGIN += qsqlmysql
