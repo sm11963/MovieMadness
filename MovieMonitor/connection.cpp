@@ -31,8 +31,11 @@ Connection::Connection(QObject *parent) :
 
 void Connection::addMovie(QString name, QString filename)
 {
-    if(filename.isEmpty() || !dbOpen)
+    if(filename.isEmpty() || !QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return;
+    }
 
     QSqlQuery query;
     query.prepare("INSERT INTO movies (name, filename) "
@@ -44,8 +47,11 @@ void Connection::addMovie(QString name, QString filename)
 
 bool Connection::inDatabase(QString filename)
 {
-    if(filename.isEmpty() || !dbOpen)
+    if(filename.isEmpty() || !QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return false;
+    }
 
     QSqlQuery query;
     query.prepare("SELECT COUNT(filename) FROM movies WHERE filename=:filename");
@@ -57,8 +63,11 @@ bool Connection::inDatabase(QString filename)
 
 bool Connection::isApproved(QString filename)
 {
-    if(!dbOpen)
+    if(!QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return false;
+    }
 
     QSqlQuery query;
     query.prepare("SELECT imbd FROM movies WHERE filename=:filename");
@@ -72,8 +81,11 @@ bool Connection::isApproved(QString filename)
 
 void Connection::removeRow(QString filename)
 {
-    if(filename.isEmpty() || !dbOpen)
+    if(filename.isEmpty() || !QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return;
+    }
 
     QSqlQuery query;
     query.prepare("DELETE FROM movies WHERE filename=:filename");
@@ -83,8 +95,11 @@ void Connection::removeRow(QString filename)
 
 void Connection::updateRow(QString oldfile, QString newfile, QString newname)
 {
-    if(!dbOpen)
+    if(!QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return;
+    }
 
     QSqlQuery query;
     query.prepare("UPDATE movies SET filename=:newname "
@@ -106,8 +121,11 @@ void Connection::updateRow(QString oldfile, QString newfile, QString newname)
 QStringList Connection::getFilenames()
 {
     QStringList resultList;
-    if(!dbOpen)
+    if(!QSqlDatabase::database().isValid())
+    {
+        QLOG_WARN() << "Database is not available...";
         return resultList;
+    }
 
     QSqlQuery query("SELECT filename FROM movies");
     while(query.next())
