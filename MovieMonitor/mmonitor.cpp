@@ -1,5 +1,8 @@
 #include "mmonitor.h"
 
+QStringList mmonitor::extensions = QStringList() << "mkv" << "avi" << "mp4"
+                                          << "iso" << "thd" << "wmv" << "m4v";
+
 mmonitor::mmonitor(QString dir, QObject *parent) :
     QObject(parent), watch_dir(dir)
 {
@@ -42,25 +45,28 @@ void mmonitor::purgeMissing(QString path)
 
 void mmonitor::processEvent(FileEvent event)
 {
-    QLOG_TRACE() << "Processing Event";
-    if(event.type.contains("IN_DELETE"))
+    QLOG_TRACE() << "Processing Event; Type: " + event.type + "; Name: " + event.name;
+    if(isMovieFile(event.name))
     {
-        dConnect->removeRow(event.name);
-    }
-    else if(event.type.contains("IN_CREATE"))
-    {
-        QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
-        if (file.isFile())
+        if(event.type.contains("IN_DELETE"))
         {
-            dConnect->addMovie(file.completeBaseName(), file.fileName());
+            dConnect->removeRow(event.name);
         }
-    }
-    else if(event.type.contains("IN_MOVED_FROM") ||
-            event.type.contains("IN_MOVED_TO"))
-    {
-        if(wQueue->isEmpty())
-            QTimer::singleShot(750, this, SLOT(checkQueue()));
-        wQueue->enqueue(event);
+        else if(event.type.contains("IN_CREATE"))
+        {
+            QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
+            if (file.isFile())
+            {
+                dConnect->addMovie(file.completeBaseName(), file.fileName());
+            }
+        }
+        else if(event.type.contains("IN_MOVED_FROM") ||
+                event.type.contains("IN_MOVED_TO"))
+        {
+            if(wQueue->isEmpty())
+                QTimer::singleShot(750, this, SLOT(checkQueue()));
+            wQueue->enqueue(event);
+        }
     }
 }
 
@@ -134,4 +140,14 @@ void mmonitor::start()
 
     watcher->connect(watcherThread, SIGNAL(started()), watcher, SLOT(startWatching()));
     watcherThread->start();
+}
+
+bool mmonitor::isMovieFile(QString filename)
+{
+     QFileInfo file(watch_dir+"/"+filename);
+     if(!file.exists())
+         return false;
+
+     QString ext = file.suffix();
+     return extensions.contains(ext, Qt::CaseInsensitive);
 }

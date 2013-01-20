@@ -26,11 +26,13 @@ public slots:
 protected:
 
 private:
+    bool isMovieFile(QString filename);
     Connection *dConnect;
     NotifyWorker *watcher;
     QThread      *watcherThread;
     QString watch_dir;
     QQueue<FileEvent> *wQueue;
+    static QStringList extensions;
     
 };
 
