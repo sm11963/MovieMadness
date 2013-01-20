@@ -9,8 +9,7 @@ Connection::Connection(QObject *parent) :
     db.setUserName("MovieMonitor");
     db.setPassword("movRus8734");
     QLOG_INFO() << "Attempting to connect to database...";
-    dbOpen = db.open();
-    if (dbOpen)
+    if (db.open())
     {
         QLOG_INFO() << "Connection successful";
         QSqlQuery query("CREATE TABLE IF NOT EXISTS movies "
@@ -25,7 +24,6 @@ Connection::Connection(QObject *parent) :
         QLOG_FATAL() << "Connection to database was unsuccessful";
         throw new std::exception;
     }
-
 }
 
 
@@ -43,6 +41,9 @@ void Connection::addMovie(QString name, QString filename)
     query.bindValue(":name", name);
     query.bindValue(":filename", filename);
     query.exec();
+
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
 }
 
 bool Connection::inDatabase(QString filename)
@@ -58,6 +59,9 @@ bool Connection::inDatabase(QString filename)
     query.bindValue(":filename", filename);
     query.exec();
     query.next();
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
+
     return query.value(0).toInt() > 0;
 }
 
@@ -73,6 +77,9 @@ bool Connection::isApproved(QString filename)
     query.prepare("SELECT imbd FROM movies WHERE filename=:filename");
     query.bindValue(":filename",filename);
     query.exec();
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
+
     if(query.next())
         return !query.value(0).isNull();
     else
@@ -91,6 +98,8 @@ void Connection::removeRow(QString filename)
     query.prepare("DELETE FROM movies WHERE filename=:filename");
     query.bindValue(":filename", filename);
     query.exec();
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
 }
 
 void Connection::updateRow(QString oldfile, QString newfile, QString newname)
@@ -107,6 +116,8 @@ void Connection::updateRow(QString oldfile, QString newfile, QString newname)
     query.bindValue(":oldname", oldfile);
     query.bindValue(":newname", newfile);
     query.exec();
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
 
     if(!isApproved(newfile))
     {
@@ -115,6 +126,8 @@ void Connection::updateRow(QString oldfile, QString newfile, QString newname)
         query.bindValue(":name", newname);
         query.bindValue(":filename", newfile);
         query.exec();
+        if(query.lastError().type() != QSqlError::NoError)
+            QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
     }
 }
 
@@ -128,6 +141,9 @@ QStringList Connection::getFilenames()
     }
 
     QSqlQuery query("SELECT filename FROM movies");
+    if(query.lastError().type() != QSqlError::NoError)
+        QLOG_ERROR() << "SQL ERROR: " + query.lastError().text();
+
     while(query.next())
     {
         resultList.append(query.value(0).toString());

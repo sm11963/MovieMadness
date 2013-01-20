@@ -46,27 +46,21 @@ void mmonitor::purgeMissing(QString path)
 void mmonitor::processEvent(FileEvent event)
 {
     QLOG_TRACE() << "Processing Event; Type: " + event.type + "; Name: " + event.name;
-    if(isMovieFile(event.name))
+    if(event.type.contains("IN_DELETE"))
     {
-        if(event.type.contains("IN_DELETE"))
-        {
-            dConnect->removeRow(event.name);
-        }
-        else if(event.type.contains("IN_CREATE"))
-        {
-            QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
-            if (file.isFile())
-            {
-                dConnect->addMovie(file.completeBaseName(), file.fileName());
-            }
-        }
-        else if(event.type.contains("IN_MOVED_FROM") ||
-                event.type.contains("IN_MOVED_TO"))
-        {
-            if(wQueue->isEmpty())
-                QTimer::singleShot(750, this, SLOT(checkQueue()));
-            wQueue->enqueue(event);
-        }
+        dConnect->removeRow(event.name);
+    }
+    else if(isMovieFile(event.name) && event.type.contains("IN_CREATE"))
+    {
+        QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
+        dConnect->addMovie(file.completeBaseName(), file.fileName());
+    }
+    else if((event.type.contains("IN_MOVED_FROM") ||
+            event.type.contains("IN_MOVED_TO")) && isMovieFile(event.name))
+    {
+        if(wQueue->isEmpty())
+            QTimer::singleShot(750, this, SLOT(checkQueue()));
+        wQueue->enqueue(event);
     }
 }
 
