@@ -8,6 +8,7 @@ Connection::Connection(QObject *parent) :
     db.setDatabaseName("Movies");
     db.setUserName("MovieMonitor");
     db.setPassword("movRus8734");
+    db.setConnectOptions("MYSQL_OPT_RECONNECT=1;");
     QLOG_INFO() << "Attempting to connect to database...";
     if (db.open())
     {
