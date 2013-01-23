@@ -26,7 +26,7 @@ void mmonitor::indexDir(QString path)
 
     foreach(QFileInfo file, files)
     {
-        if(!dConnect->inDatabase(file.fileName()))
+        if(!dConnect->inDatabase(file.fileName()) && isMovieFile(file.fileName()))
             dConnect->addMovie(file.completeBaseName(), file.fileName());
     }
 }
@@ -55,8 +55,8 @@ void mmonitor::processEvent(FileEvent event)
         QFileInfo file = QFileInfo(watch_dir+"/"+event.name);
         dConnect->addMovie(file.completeBaseName(), file.fileName());
     }
-    else if((event.type.contains("IN_MOVED_FROM") ||
-            event.type.contains("IN_MOVED_TO")) && isMovieFile(event.name))
+    else if(event.type.contains("IN_MOVED_FROM") ||
+            (event.type.contains("IN_MOVED_TO") && isMovieFile(event.name)))
     {
         if(wQueue->isEmpty())
             QTimer::singleShot(750, this, SLOT(checkQueue()));
