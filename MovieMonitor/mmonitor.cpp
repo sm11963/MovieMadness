@@ -38,7 +38,7 @@ void mmonitor::purgeMissing(QString path)
     QStringList dFilenames = dConnect->getFilenames();
     foreach(QString filename, dFilenames)
     {
-        if(!files.contains(filename))
+        if(!files.contains(filename) || !isMovieFile(filename))
             dConnect->removeRow(filename);
     }
 }
