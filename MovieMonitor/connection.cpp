@@ -17,7 +17,7 @@ Connection::Connection(QObject *parent) :
                               "(id int NOT NULL AUTO_INCREMENT, "
                               "name varchar(255) NOT NULL, "
                               "filename varchar(255) NOT NULL, "
-                              "imbd varchar(255), "
+                              "imdb varchar(255), "
                               "PRIMARY KEY (id))");
     }
     else
@@ -75,7 +75,7 @@ bool Connection::isApproved(QString filename)
     }
 
     QSqlQuery query;
-    query.prepare("SELECT imbd FROM movies WHERE filename=:filename");
+    query.prepare("SELECT imdb FROM movies WHERE filename=:filename");
     query.bindValue(":filename",filename);
     query.exec();
     if(query.lastError().type() != QSqlError::NoError)
